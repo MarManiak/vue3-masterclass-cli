@@ -95,6 +95,7 @@ const routes = [
   {
     path: '/logout',
     name: 'SignOut',
+    // eslint-disable-next-line no-unused-vars
     async beforeEnter(to, from) {
       await store.dispatch('signOut');
       return { name: 'Home' };

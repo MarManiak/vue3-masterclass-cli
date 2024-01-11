@@ -1,6 +1,7 @@
 import firebase from 'firebase';
 import { findById, docToResource } from '@/helpers';
 export default {
+  // eslint-disable-next-line no-unused-vars
   initAuthentication({ dispatch, commit, state }) {
     if (state.authObserverUnsubscribe) return;
     return new Promise((resolve) => {
@@ -151,7 +152,7 @@ export default {
     dispatch('fetchItem', { emoji: '💬', resource: 'posts', id }),
   fetchUser: ({ dispatch }, { id }) =>
     dispatch('fetchItem', { emoji: '🙋', resource: 'users', id }),
-  fetchAuthUser: async ({ dispatch, state, commit }) => {
+  fetchAuthUser: async ({ dispatch, /*state,*/ commit }) => {
     const userId = firebase.auth().currentUser?.uid;
     if (!userId) return;
     await dispatch('fetchItem', {
@@ -197,7 +198,7 @@ export default {
   fetchUsers: ({ dispatch }, { ids }) =>
     dispatch('fetchItems', { resource: 'users', ids, emoji: '🙋' }),
 
-  fetchItem({ state, commit }, { id, emoji, resource, handleUnsubscribe = null }) {
+  fetchItem({ /*state,*/ commit }, { id, emoji, resource, handleUnsubscribe = null }) {
     console.log('🔥', emoji, id);
     return new Promise((resolve) => {
       const unsubscribe = firebase

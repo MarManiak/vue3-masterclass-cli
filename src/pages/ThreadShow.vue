@@ -3,6 +3,7 @@
     <h1>
       {{ thread.title }}
       <router-link
+        v-if="thread.userId === authUser?.id"
         :to="{ name: 'ThreadEdit', id: this.id }"
         class="btn-green btn-small"
         tag="button"
@@ -20,15 +21,27 @@
 
     <post-list :posts="threadPosts" />
 
-    <post-editor @save="addPost" />
+    <post-editor v-if="authUser" @save="addPost" />
+    <div v-else class="text-center" style="margin-bottom: 50px">
+      <router-link :to="{ name: 'SignIn', query: { redirectTo: $route.path } }"
+        >Sign In</router-link
+      >
+      or
+      <router-link :to="{ name: 'Register', query: { redirectTo: $route.path } }"
+        >Register</router-link
+      >
+      to reply.
+    </div>
   </div>
 </template>
 
 <script>
 import PostList from '@/components/PostList';
 import PostEditor from '@/components/PostEditor';
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import asyncDataStatus from '@/mixins/asyncDataStatus';
+import useNotifications from '@/composables/useNotifications';
+import difference from 'lodash/difference';
 export default {
   name: 'ThreadShow',
   components: {
@@ -42,22 +55,48 @@ export default {
       type: String,
     },
   },
+  setup() {
+    const { addNotification } = useNotifications();
+    return { addNotification };
+  },
   computed: {
+    ...mapGetters('auth', ['authUser']),
     threads() {
-      return this.$store.state.threads;
+      return this.$store.state.threads.items;
     },
     posts() {
-      return this.$store.state.posts;
+      return this.$store.state.posts.items;
     },
     thread() {
-      return this.$store.getters.thread(this.id);
+      return this.$store.getters['threads/thread'](this.id);
     },
     threadPosts() {
       return this.posts.filter((post) => post.threadId === this.id);
     },
   },
   methods: {
-    ...mapActions(['fetchThread', 'fetchUsers', 'fetchPosts', 'createPost']),
+    ...mapActions('threads', ['fetchThread']),
+    ...mapActions('users', ['fetchUsers']),
+    ...mapActions('posts', ['fetchPosts', 'createPost']),
+    async fetchPostsWithUsers(ids) {
+      // fetch the posts
+      const posts = await this.fetchPosts({
+        ids,
+        onSnapshot: ({ isLocal, previousItem }) => {
+          console.log(isLocal);
+          if (
+            !this.asyncDataStatus_ready ||
+            isLocal ||
+            (previousItem?.edited && !previousItem?.edited?.at)
+          )
+            return;
+          this.addNotification({ message: 'Thread recently updated', timeout: 5000 });
+        },
+      });
+      // fetch the users associated with the posts
+      const users = posts.map((post) => post.userId).concat(this.thread.userId);
+      await this.fetchUsers({ ids: users });
+    },
     addPost(eventData) {
       const post = {
         ...eventData.post,
@@ -68,7 +107,19 @@ export default {
   },
   async created() {
     // fetch the thread
-    const thread = await this.fetchThread({ id: this.id });
+    const thread = await this.fetchThread({
+      id: this.id,
+      onSnapshot: async ({ isLocal, item, previousItem }) => {
+        if (!this.asyncDataStatus_ready || isLocal) return;
+        const newPosts = difference(item.posts, previousItem.posts);
+        const hasNewPosts = newPosts.length > 0;
+        if (hasNewPosts) {
+          await this.fetchPostsWithUsers(newPosts);
+        } else {
+          this.addNotification({ message: 'Thread recently updated', timeout: 5000 });
+        }
+      },
+    });
     // fetch the posts
     const posts = await this.fetchPosts({ ids: thread.posts });
     // fetch the users associated with the posts

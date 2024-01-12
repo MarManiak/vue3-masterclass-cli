@@ -26,8 +26,20 @@
         </div>
 
         <div class="form-group">
-          <label for="avatar">Avatar</label>
-          <input v-model="form.avatar" id="avatar" type="text" class="form-input" />
+          <label for="avatar">
+            Avatar
+            <div v-if="avatarPreview">
+              <img :src="avatarPreview" class="avatar-xlarge" />
+            </div>
+          </label>
+          <input
+            v-show="!avatarPreview"
+            id="avatar"
+            type="file"
+            class="form-input"
+            @change="handleImageUpload"
+            accept="image/*"
+          />
         </div>
 
         <div class="form-actions">
@@ -46,6 +58,7 @@
 export default {
   data() {
     return {
+      avatarPreview: null,
       form: {
         name: '',
         username: '',
@@ -57,12 +70,25 @@ export default {
   },
   methods: {
     async register() {
-      await this.$store.dispatch('registerUserWithEmailAndPassword', this.form);
-      this.$router.push('/');
+      await this.$store.dispatch('auth/registerUserWithEmailAndPassword', this.form);
+      this.successRedirect();
     },
     async registerWithGoogle() {
-      await this.$store.dispatch('signInWithGoogle');
-      this.$router.push('/');
+      await this.$store.dispatch('auth/signInWithGoogle');
+      this.successRedirect();
+    },
+    handleImageUpload(e) {
+      this.form.avatar = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        this.avatarPreview = event.target.result;
+      };
+      reader.readAsDataURL(this.form.avatar);
+    },
+    successRedirect() {
+      console.log('redirecting');
+      const redirectTo = this.$route.query.redirectTo || { name: 'Home' };
+      this.$router.push(redirectTo);
     },
   },
   created() {

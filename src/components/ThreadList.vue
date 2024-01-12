@@ -19,7 +19,7 @@
         <div class="activity">
           <p class="replies-count">{{ thread.repliesCount }} replies</p>
 
-          <img class="avatar-medium" :src="userById(thread.userId).avatar" alt="" />
+          <AppAvatarImb class="avatar-medium" :src="userById(thread.userId).avatar" />
 
           <div>
             <p class="text-xsmall">
@@ -44,10 +44,10 @@ export default {
   },
   computed: {
     posts() {
-      return this.$store.state.posts;
+      return this.$store.state.posts.items;
     },
     users() {
-      return this.$store.state.users;
+      return this.$store.state.users.items;
     },
   },
   methods: {

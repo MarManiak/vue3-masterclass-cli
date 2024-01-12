@@ -1,7 +1,7 @@
 <template>
   <div class="profile-card">
     <form @submit.prevent="save">
-      <p class="text-center avatar-edit">
+      <!-- <p class="text-center avatar-edit">
         <label for="avatar">
           <AppAvatarImg
             :src="activeUser.avatar"
@@ -21,8 +21,13 @@
           />
         </label>
       </p>
-      <UserProfileCardEditorRandomAvatar @hit="onRandomAvatarHit" />
-
+      <UserProfileCardEditorRandomAvatar @hit="onRandomAvatarHit" /> -->
+      <AppAvatarImgEditor
+        :avatar="activeUser.avatar"
+        :uploadingImage="uploadingImage"
+        @upload="handleUploadImage"
+        @random="handleRandomImage"
+      />
       <div class="form-group">
         <input
           v-model="activeUser.username"
@@ -93,9 +98,9 @@
 
 <script>
 import { mapActions } from 'vuex';
-import UserProfileCardEditorRandomAvatar from './UserProfileCardEditorRandomAvatar';
+// import UserProfileCardEditorRandomAvatar from './UserProfileCardEditorRandomAvatar';
 export default {
-  components: { UserProfileCardEditorRandomAvatar },
+  // components: { UserProfileCardEditorRandomAvatar },
   props: {
     user: {
       type: Object,
@@ -105,39 +110,39 @@ export default {
   data() {
     return {
       uploadingImage: false,
+      uploadedFile: null,
       randomAvatarImageType: '',
       activeUser: { ...this.user },
     };
   },
   methods: {
     ...mapActions('auth', ['uploadAvatar']),
-    async handleAvatarUpload(e) {
-      this.uploadingImage = true;
-      const file = e.target.files[0];
-      const uploadedImage = await this.uploadAvatar({ file });
-      this.activeUser.avatar = uploadedImage || this.activeUser.avatar;
-      this.uploadingImage = false;
+    handleUploadImage(e) {
+      // this.uploadingImage = true;
+      this.uploadedFile = e.file;
+      this.activeUser.avatar = e.dataUrl;
     },
-    async handleRandomAvatarUpload() {
+    handleRandomImage(e) {
+      this.uploadedFile = null;
+      this.activeUser.avatar = e.url;
+    },
+    async handleAvatarUpload() {
       const randomAvatarGenerated = this.activeUser.avatar.includes('pixabay.com');
-      if (randomAvatarGenerated) {
+      this.uploadingImage = randomAvatarGenerated || this.uploadedFile != null;
+      let uploadedImage = null;
+      if (this.uploadedFile != null) {
+        uploadedImage = await this.uploadAvatar({ file: this.uploadedFile });
+      } else if (randomAvatarGenerated) {
         const image = await fetch(this.activeUser.avatar);
         const blob = await image.blob();
         // console.log('handleRandomAvatarUpload', { image, blob });
-        this.activeUser.avatar = await this.uploadAvatar({ file: blob, filename: 'avatar' });
+        uploadedImage = await this.uploadAvatar({ file: blob, filename: 'avatar' });
       }
-    },
-    onRandomAvatarHit(e) {
-      // console.log('onRandomAvatarHit', {
-      //   userImageURL: e.eventData.userImageURL,
-      //   previewURL: e.eventData.previewURL,
-      //   e,
-      // });
-      this.activeUser.avatar =
-        e.eventData.userImageURL || e.eventData.previewURL || e.eventData.webformatURL;
+      this.activeUser.avatar = uploadedImage || this.activeUser.avatar;
+      this.uploadingImage = false;
     },
     async save() {
-      await this.handleRandomAvatarUpload();
+      await this.handleAvatarUpload();
       this.$store.dispatch('users/updateUser', { ...this.activeUser });
       this.$router.push({ name: 'Profile' });
     },

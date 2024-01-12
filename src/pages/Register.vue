@@ -26,7 +26,7 @@
         </div>
 
         <div class="form-group">
-          <label for="avatar">
+          <!-- <label for="avatar">
             Avatar
             <div v-if="avatarPreview">
               <img :src="avatarPreview" class="avatar-xlarge" />
@@ -39,6 +39,12 @@
             class="form-input"
             @change="handleImageUpload"
             accept="image/*"
+          /> -->
+          <AppAvatarImgEditor
+            :avatar="avatarPreview"
+            :uploadingImage="uploadingImage"
+            @upload="handleUploadImage"
+            @random="handleRandomImage"
           />
         </div>
 
@@ -58,7 +64,9 @@
 export default {
   data() {
     return {
-      avatarPreview: null,
+      uploadedFile: null,
+      avatarPreview: '',
+      uploadingImage: false,
       form: {
         name: '',
         username: '',
@@ -69,27 +77,55 @@ export default {
     };
   },
   methods: {
+    handleUploadImage(e) {
+      // this.uploadingImage = true;
+      this.uploadedFile = e.file;
+      this.avatarPreview = e.dataUrl;
+    },
+    handleRandomImage(e) {
+      this.uploadedFile = null;
+      this.avatarPreview = e.url;
+    },
+    async getAvatarData() {
+      const randomAvatarGenerated = this.avatarPreview.includes('pixabay.com');
+      this.uploadingImage = randomAvatarGenerated || this.uploadedFile != null;
+      let avatar = null;
+      if (this.uploadedFile != null) {
+        avatar = this.uploadedFile;
+      } else if (randomAvatarGenerated) {
+        const image = await fetch(this.avatarPreview);
+        const blob = await image.blob();
+        avatar = blob;
+      }
+      this.form.avatar = avatar || this.form.avatar;
+    },
+
     async register() {
+      await getAvatarData();
       await this.$store.dispatch('auth/registerUserWithEmailAndPassword', {
         ...this.form,
         systemId: this.$route.query.systemId,
       });
+      this.uploadingImage = false;
       this.successRedirect();
     },
     async registerWithGoogle() {
+      await this.getAvatarData();
       await this.$store.dispatch('auth/signInWithGoogle', {
+        ...this.form,
         systemId: this.$route.query.systemId,
       });
+      this.uploadingImage = false;
       this.successRedirect();
     },
-    handleImageUpload(e) {
-      this.form.avatar = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        this.avatarPreview = event.target.result;
-      };
-      reader.readAsDataURL(this.form.avatar);
-    },
+    // handleImageUpload(e) {
+    //   this.form.avatar = e.target.files[0];
+    //   const reader = new FileReader();
+    //   reader.onload = (event) => {
+    //     this.avatarPreview = event.target.result;
+    //   };
+    //   reader.readAsDataURL(this.form.avatar);
+    // },
     successRedirect() {
       console.log('redirecting');
       const redirectTo = this.$route.query.redirectTo || { name: 'Home' };

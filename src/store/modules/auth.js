@@ -63,21 +63,23 @@ export default {
     signInWithEmailAndPassword(_context, { email, password }) {
       return firebase.auth().signInWithEmailAndPassword(email, password);
     },
-    async signInWithGoogle({ dispatch }, { systemId }) {
+    async signInWithGoogle({ dispatch }, { avatar = null, username, systemId }) {
       const provider = new firebase.auth.GoogleAuthProvider();
       const response = await firebase.auth().signInWithPopup(provider);
       const user = response.user;
       const userRef = firebase.firestore().collection('users').doc(user.uid);
       const userDoc = await userRef.get();
       if (!userDoc.exists) {
+        avatar = await dispatch('uploadAvatar', { authId: user.uid, file: avatar });
+
         return dispatch(
           'users/createUser',
           {
             id: user.uid,
             name: user.displayName,
             email: user.email,
-            username: user.email,
-            avatar: user.photoURL,
+            username: username || user.email,
+            avatar: avatar || user.photoURL,
             systemId,
           },
           { root: true },

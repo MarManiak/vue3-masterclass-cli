@@ -70,11 +70,16 @@ export default {
   },
   methods: {
     async register() {
-      await this.$store.dispatch('auth/registerUserWithEmailAndPassword', this.form);
+      await this.$store.dispatch('auth/registerUserWithEmailAndPassword', {
+        ...this.form,
+        systemId: this.$route.query.systemId,
+      });
       this.successRedirect();
     },
     async registerWithGoogle() {
-      await this.$store.dispatch('auth/signInWithGoogle');
+      await this.$store.dispatch('auth/signInWithGoogle', {
+        systemId: this.$route.query.systemId,
+      });
       this.successRedirect();
     },
     handleImageUpload(e) {

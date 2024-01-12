@@ -31,13 +31,13 @@ export default {
     },
     async registerUserWithEmailAndPassword(
       { dispatch },
-      { avatar = null, email, name, username, password },
+      { avatar = null, email, name, username, password, systemId },
     ) {
       const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
       avatar = await dispatch('uploadAvatar', { authId: result.user.uid, file: avatar });
       await dispatch(
         'users/createUser',
-        { id: result.user.uid, email, name, username, avatar },
+        { id: result.user.uid, email, name, username, avatar, systemId },
         { root: true },
       );
     },
@@ -63,7 +63,7 @@ export default {
     signInWithEmailAndPassword(_context, { email, password }) {
       return firebase.auth().signInWithEmailAndPassword(email, password);
     },
-    async signInWithGoogle({ dispatch }) {
+    async signInWithGoogle({ dispatch }, { systemId }) {
       const provider = new firebase.auth.GoogleAuthProvider();
       const response = await firebase.auth().signInWithPopup(provider);
       const user = response.user;
@@ -78,6 +78,7 @@ export default {
             email: user.email,
             username: user.email,
             avatar: user.photoURL,
+            systemId,
           },
           { root: true },
         );

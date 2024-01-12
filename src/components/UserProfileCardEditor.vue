@@ -21,7 +21,7 @@
           />
         </label>
       </p>
-      <UserProfileCardEditorRandomAvatar @hit="activeUser.avatar = $event" />
+      <UserProfileCardEditorRandomAvatar @hit="onRandomAvatarHit" />
 
       <div class="form-group">
         <input
@@ -105,6 +105,7 @@ export default {
   data() {
     return {
       uploadingImage: false,
+      randomAvatarImageType: '',
       activeUser: { ...this.user },
     };
   },
@@ -118,12 +119,22 @@ export default {
       this.uploadingImage = false;
     },
     async handleRandomAvatarUpload() {
-      const randomAvatarGenerated = this.activeUser.avatar.startsWith('https://pixabay');
+      const randomAvatarGenerated = this.activeUser.avatar.includes('pixabay.com');
       if (randomAvatarGenerated) {
         const image = await fetch(this.activeUser.avatar);
         const blob = await image.blob();
-        this.activeUser.avatar = await this.uploadAvatar({ file: blob, filename: 'random' });
+        // console.log('handleRandomAvatarUpload', { image, blob });
+        this.activeUser.avatar = await this.uploadAvatar({ file: blob, filename: 'avatar' });
       }
+    },
+    onRandomAvatarHit(e) {
+      // console.log('onRandomAvatarHit', {
+      //   userImageURL: e.eventData.userImageURL,
+      //   previewURL: e.eventData.previewURL,
+      //   e,
+      // });
+      this.activeUser.avatar =
+        e.eventData.userImageURL || e.eventData.previewURL || e.eventData.webformatURL;
     },
     async save() {
       await this.handleRandomAvatarUpload();

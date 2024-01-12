@@ -41,15 +41,17 @@ export default {
         { root: true },
       );
     },
-    async uploadAvatar({ state }, { authId, file, filename }) {
+    async uploadAvatar({ state }, { authId, file /*, filename*/ }) {
       if (!file) return null;
+      console.log({ fileArg: file });
       authId = authId || state.authId;
-      filename = filename || file.name;
+      // filename = filename || file.name;
       try {
         const storageBucket = firebase
           .storage()
           .ref()
-          .child(`uploads/${authId}/images/${Date.now()}-${filename}`);
+          // .child(`uploads/${authId}/images/${Date.now()}-${filename}`);
+          .child(`uploads/${authId}/images/avatar`);
         const snapshot = await storageBucket.put(file);
         const url = await snapshot.ref.getDownloadURL();
         return url;

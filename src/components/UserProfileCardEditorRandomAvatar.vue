@@ -41,7 +41,7 @@ export default {
       );
       const data = await res.json();
       const randomImage = arrayRandom(data.hits);
-      this.$emit('hit', randomImage.webformatURL);
+      this.$emit('hit', { eventData: randomImage });
     },
   },
 };

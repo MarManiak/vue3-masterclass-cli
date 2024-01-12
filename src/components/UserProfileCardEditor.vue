@@ -4,7 +4,7 @@
       <p class="text-center avatar-edit">
         <label for="avatar">
           <AppAvatarImg
-            :src="user.avatar"
+            :src="activeUser.avatar"
             :alt="`${user.name} profile picture`"
             class="avatar-xlarge img-update"
           />

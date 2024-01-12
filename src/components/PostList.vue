@@ -2,11 +2,15 @@
   <div class="post-list">
     <div class="post" v-for="post in posts" :key="post.id">
       <div v-if="userById(post.userId)" class="user-info">
-        <a href="#" class="user-name">{{ userById(post.userId).name }}</a>
+        <!-- <a href="#" class="user-name">{{ userById(post.userId).name }}</a> -->
+        <span class="user-name">{{ userById(post.userId).name }}</span>
 
-        <a href="#">
+        <!-- <a href="#">
           <AppAvatarImg class="avatar-large" :src="userById(post.userId).avatar" />
-        </a>
+        </a> -->
+        <span>
+          <AppAvatarImg class="avatar-large" :src="userById(post.userId).avatar" />
+        </span>
 
         <p class="desktop-only text-small">{{ userById(post.userId).postsCount }} posts</p>
         <p class="desktop-only text-small">{{ userById(post.userId).threadsCount }} threads</p>

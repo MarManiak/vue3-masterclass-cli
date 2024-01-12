@@ -11,8 +11,10 @@
             }}</router-link>
           </p>
           <p class="text-faded text-xsmall">
-            By <a href="#">{{ userById(thread.userId).name }}</a
-            >, <AppDate :timestamp="thread.publishedAt" />.
+            By
+            <!-- <a href="#">{{ userById(thread.userId).name }}</a> -->
+            <span>{{ userById(thread.userId).name }}</span>
+            , <AppDate :timestamp="thread.publishedAt" />.
           </p>
         </div>
 
@@ -23,7 +25,8 @@
 
           <div>
             <p class="text-xsmall">
-              <a href="#">{{ userById(thread.userId).name }}</a>
+              <!-- <a href="#">{{ userById(thread.userId).name }}</a> -->
+              <span>{{ userById(thread.userId).name }}</span>
             </p>
             <p class="text-xsmall text-faded"><AppDate :timestamp="thread.publishedAt" /></p>
           </div>

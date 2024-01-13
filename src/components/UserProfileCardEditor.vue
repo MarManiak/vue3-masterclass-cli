@@ -1,6 +1,6 @@
 <template>
   <div class="profile-card">
-    <form @submit.prevent="save">
+    <VeeForm @submit="save">
       <AppAvatarImgEditor
         :src="activeUser.avatar"
         :alt="`${user.name}'s avatar preview`"
@@ -8,68 +8,47 @@
         withRandom
         @change="handleAvatarChange"
       />
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input
-          v-model="activeUser.username"
-          id="username"
-          type="text"
-          placeholder="Username"
-          class="form-input text-lead text-bold"
+      <AppFormField
+        label="Username"
+        name="username"
+        v-model="activeUser.username"
+        :rules="`required|unique:users,username,${user.username}`"
+      />
+      <AppFormField label="Full Name" name="name" v-model="activeUser.name" rules="required" />
+      <AppFormField
+        label="Bio"
+        name="bio"
+        as="textarea"
+        v-model="activeUser.bio"
+        placeholder="Write a few words about yourself."
+      />
+      <AppFormField label="Website" name="website" v-model="activeUser.website" rules="url" />
+      <AppFormField
+        label="Email"
+        name="email"
+        v-model="activeUser.email"
+        :rules="`required|email|unique:users,email,${user.email}`"
+      />
+      <AppFormField
+        label="Location"
+        name="location"
+        v-model="activeUser.location"
+        list="locations"
+        @mouseenter="loadLocationOptions"
+      />
+      <datalist id="locations">
+        <option
+          v-for="location in locationOptions"
+          :value="location.name.common"
+          :key="location.cca2"
         />
-      </div>
-
-      <div class="form-group">
-        <label for="name">Name</label>
-        <input
-          id="name"
-          v-model="activeUser.name"
-          type="text"
-          placeholder="Full Name"
-          class="form-input text-lead"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="user_bio">Bio</label>
-        <textarea
-          v-model="activeUser.bio"
-          class="form-input"
-          id="user_bio"
-          placeholder="Write a few words about yourself."
-        ></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="user_website">Website</label>
-        <input
-          v-model="activeUser.website"
-          autocomplete="off"
-          class="form-input"
-          id="user_website"
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="user_email">Email</label>
-        <input v-model="activeUser.email" autocomplete="off" class="form-input" id="user_email" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="user_location">Location</label>
-        <input
-          v-model="activeUser.location"
-          autocomplete="off"
-          class="form-input"
-          id="user_location"
-        />
-      </div>
+      </datalist>
 
       <div class="btn-group space-between">
         <button class="btn-ghost" @click.prevent="cancel">Cancel</button>
         <button type="submit" class="btn-blue">Save</button>
       </div>
-    </form>
+    </VeeForm>
   </div>
 </template>
 
@@ -91,10 +70,18 @@ export default {
       uploadedFile: null,
       randomAvatarImageType: '',
       activeUser: { ...this.user },
+      locationOptions: [],
     };
   },
   methods: {
     ...mapActions('auth', ['uploadAvatar']),
+    async loadLocationOptions() {
+      if (this.locationOptions.length) return;
+      const res = await fetch('https://restcountries.com/v3/all?fields=name,cca2,cca3');
+      const locationResults = await res.json();
+      locationResults.sort((a, b) => a.name.common.localeCompare(b.name.common));
+      this.locationOptions = locationResults;
+    },
     handleAvatarChange(e) {
       console.log('UserProfileEdit->handleAvatarChange', e);
       this.uploadedFile = e.file;

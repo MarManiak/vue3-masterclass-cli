@@ -1,42 +1,52 @@
 <template>
-  <p class="text-center avatar-edit">
-    <label for="avatar">
-      <AppAvatarImg :src="avatar" alt="profile image" class="avatar-xlarge img-update" />
-      <div class="avatar-upload-overlay">
-        <AppSpinner v-if="uploadingImage" color="white" />
-        <fa v-else icon="camera" size="3x" :style="{ color: 'white', opacity: '.8' }" />
-      </div>
-      <input v-show="false" type="file" id="avatar" accept="image/*" @change="handleAvatarUpload" />
-    </label>
-  </p>
-  <AppAvatarImgEditorRandomAvatar @hit="onRandomAvatarHit" />
+  <div class="form-group">
+    <p class="text-center avatar-edit">
+      <label for="avatar">
+        <AppAvatarImg class="avatar-xlarge img-update" v-bind="$attrs" />
+        <div class="avatar-upload-overlay">
+          <AppSpinner v-if="processing" color="white" />
+          <fa v-else icon="camera" size="3x" :style="{ color: 'white', opacity: '.8' }" />
+        </div>
+        <input
+          v-show="false"
+          type="file"
+          id="avatar"
+          accept="image/*"
+          @change="handleAvatarUpload"
+        />
+      </label>
+    </p>
+    <AppAvatarImgEditorRandomAvatar v-if="withRandom" @hit="onRandomAvatarHit" />
+  </div>
 </template>
 <script>
+import { fileAsDataUrlAsync } from '@/helpers';
 export default {
-  emits: ['upload', 'random'],
+  emits: ['change'],
   props: {
-    avatar: {
-      type: String,
-      required: true,
-    },
-    uploadingImage: {
+    processing: {
       type: Boolean,
-      required: true,
+      default: false,
+    },
+    withRandom: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
     return {};
   },
   methods: {
-    handleAvatarUpload(e) {
-      const file = e.target.files[0];
-      let dataUrl = '';
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        dataUrl = reader.result;
-        this.$emit('upload', { file, dataUrl });
-      });
-      reader.readAsDataURL(file);
+    async handleAvatarUpload(e) {
+      try {
+        const file = e.target.files[0];
+        const dataUrl = await fileAsDataUrlAsync(file);
+        this.$emit('change', { file, dataUrl });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        this.pro;
+      }
     },
     onRandomAvatarHit(e) {
       // console.log('onRandomAvatarHit', {
@@ -44,9 +54,9 @@ export default {
       //   previewURL: e.eventData.previewURL,
       //   e,
       // });
-      this.$emit('random', {
-        url: e.eventData.userImageURL || e.eventData.previewURL || e.eventData.webformatURL,
-      });
+      const randomImage = e.eventData || {};
+      const url = randomImage.userImageURL || randomImage.previewURL || randomImage.webformatURL;
+      if (url) this.$emit('change', { url });
     },
   },
 };

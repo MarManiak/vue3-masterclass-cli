@@ -45,3 +45,19 @@ export const arrayRandom = (array) => {
   const randomIndex = Math.floor(Math.random() * array.length);
   return array[randomIndex];
 };
+
+export const fileAsDataUrlAsync = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+export const webresourceToBlobAsync = async (url) => {
+  const webResource = await fetch(url);
+  return webResource.blob();
+};

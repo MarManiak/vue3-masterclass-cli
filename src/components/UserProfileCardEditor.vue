@@ -1,36 +1,18 @@
 <template>
   <div class="profile-card">
     <form @submit.prevent="save">
-      <!-- <p class="text-center avatar-edit">
-        <label for="avatar">
-          <AppAvatarImg
-            :src="activeUser.avatar"
-            :alt="`${user.name} profile picture`"
-            class="avatar-xlarge img-update"
-          />
-          <div class="avatar-upload-overlay">
-            <AppSpinner v-if="uploadingImage" color="white" />
-            <fa v-else icon="camera" size="3x" :style="{ color: 'white', opacity: '.8' }" />
-          </div>
-          <input
-            v-show="false"
-            type="file"
-            id="avatar"
-            accept="image/*"
-            @change="handleAvatarUpload"
-          />
-        </label>
-      </p>
-      <UserProfileCardEditorRandomAvatar @hit="onRandomAvatarHit" /> -->
       <AppAvatarImgEditor
-        :avatar="activeUser.avatar"
-        :uploadingImage="uploadingImage"
-        @upload="handleUploadImage"
-        @random="handleRandomImage"
+        :src="activeUser.avatar"
+        :alt="`${user.name}'s avatar preview`"
+        :processing="uploadingImage"
+        withRandom
+        @change="handleAvatarChange"
       />
       <div class="form-group">
+        <label for="username">Username</label>
         <input
           v-model="activeUser.username"
+          id="username"
           type="text"
           placeholder="Username"
           class="form-input text-lead text-bold"
@@ -38,7 +20,9 @@
       </div>
 
       <div class="form-group">
+        <label for="name">Name</label>
         <input
+          id="name"
           v-model="activeUser.name"
           type="text"
           placeholder="Full Name"
@@ -55,13 +39,6 @@
           placeholder="Write a few words about yourself."
         ></textarea>
       </div>
-
-      <div class="stats">
-        <span>{{ user.postsCount }} posts</span>
-        <span>{{ user.threadsCount }} threads</span>
-      </div>
-
-      <hr />
 
       <div class="form-group">
         <label class="form-label" for="user_website">Website</label>
@@ -98,7 +75,8 @@
 
 <script>
 import { mapActions } from 'vuex';
-// import UserProfileCardEditorRandomAvatar from './UserProfileCardEditorRandomAvatar';
+import { webresourceToBlobAsync } from '@/helpers';
+
 export default {
   // components: { UserProfileCardEditorRandomAvatar },
   props: {
@@ -117,14 +95,10 @@ export default {
   },
   methods: {
     ...mapActions('auth', ['uploadAvatar']),
-    handleUploadImage(e) {
-      // this.uploadingImage = true;
+    handleAvatarChange(e) {
+      console.log('UserProfileEdit->handleAvatarChange', e);
       this.uploadedFile = e.file;
-      this.activeUser.avatar = e.dataUrl;
-    },
-    handleRandomImage(e) {
-      this.uploadedFile = null;
-      this.activeUser.avatar = e.url;
+      this.activeUser.avatar = e.dataUrl || e.url;
     },
     async handleAvatarUpload() {
       const randomAvatarGenerated = this.activeUser.avatar.includes('pixabay.com');
@@ -133,10 +107,9 @@ export default {
       if (this.uploadedFile != null) {
         uploadedImage = await this.uploadAvatar({ file: this.uploadedFile });
       } else if (randomAvatarGenerated) {
-        const image = await fetch(this.activeUser.avatar);
-        const blob = await image.blob();
-        // console.log('handleRandomAvatarUpload', { image, blob });
-        uploadedImage = await this.uploadAvatar({ file: blob, filename: 'avatar' });
+        uploadedImage = await this.uploadAvatar({
+          file: await webresourceToBlobAsync(this.activeUser.avatar),
+        });
       }
       this.activeUser.avatar = uploadedImage || this.activeUser.avatar;
       this.uploadingImage = false;

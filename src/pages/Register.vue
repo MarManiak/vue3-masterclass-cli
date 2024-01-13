@@ -26,25 +26,12 @@
         </div>
 
         <div class="form-group">
-          <!-- <label for="avatar">
-            Avatar
-            <div v-if="avatarPreview">
-              <img :src="avatarPreview" class="avatar-xlarge" />
-            </div>
-          </label>
-          <input
-            v-show="!avatarPreview"
-            id="avatar"
-            type="file"
-            class="form-input"
-            @change="handleImageUpload"
-            accept="image/*"
-          /> -->
           <AppAvatarImgEditor
-            :avatar="avatarPreview"
-            :uploadingImage="uploadingImage"
-            @upload="handleUploadImage"
-            @random="handleRandomImage"
+            :src="avatarPreview"
+            :processing="uploadingImage"
+            withRandom
+            alt="new user avatar preview"
+            @change="handleAvatarChange"
           />
         </div>
 
@@ -61,6 +48,7 @@
   </div>
 </template>
 <script>
+import { webresourceToBlobAsync } from '@/helpers';
 export default {
   data() {
     return {
@@ -77,14 +65,10 @@ export default {
     };
   },
   methods: {
-    handleUploadImage(e) {
-      // this.uploadingImage = true;
+    handleAvatarChange(e) {
+      console.log('Register->handleAvatarChange', e);
       this.uploadedFile = e.file;
-      this.avatarPreview = e.dataUrl;
-    },
-    handleRandomImage(e) {
-      this.uploadedFile = null;
-      this.avatarPreview = e.url;
+      this.avatarPreview = e.dataUrl || e.url;
     },
     async getAvatarData() {
       const randomAvatarGenerated = this.avatarPreview.includes('pixabay.com');
@@ -93,15 +77,13 @@ export default {
       if (this.uploadedFile != null) {
         avatar = this.uploadedFile;
       } else if (randomAvatarGenerated) {
-        const image = await fetch(this.avatarPreview);
-        const blob = await image.blob();
-        avatar = blob;
+        avatar = await webresourceToBlobAsync(this.avatarPreview);
       }
       this.form.avatar = avatar || this.form.avatar;
     },
 
     async register() {
-      await getAvatarData();
+      await this.getAvatarData();
       await this.$store.dispatch('auth/registerUserWithEmailAndPassword', {
         ...this.form,
         systemId: this.$route.query.systemId,

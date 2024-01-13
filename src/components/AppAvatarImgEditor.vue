@@ -49,11 +49,6 @@ export default {
       }
     },
     onRandomAvatarHit(e) {
-      // console.log('onRandomAvatarHit', {
-      //   userImageURL: e.eventData.userImageURL,
-      //   previewURL: e.eventData.previewURL,
-      //   e,
-      // });
       const randomImage = e.eventData || {};
       const url = randomImage.userImageURL || randomImage.previewURL || randomImage.webformatURL;
       if (url) this.$emit('change', { url });

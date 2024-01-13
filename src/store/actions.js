@@ -1,4 +1,4 @@
-import firebase from 'firebase';
+import firebase from '@/helpers/firebase';
 import { findById } from '@/helpers';
 export default {
   fetchItem(
@@ -35,12 +35,14 @@ export default {
     });
   },
   fetchItems({ dispatch }, { ids, resource, emoji, onSnapshot = null }) {
-    console.log('fetchItems(payload: ', { ids: ids || null, resource });
-    if (!ids) return [];
+    ids = ids || [];
     return Promise.all(ids.map((id) => dispatch('fetchItem', { id, resource, emoji, onSnapshot })));
   },
   async unsubscribeAllSnapshots({ state, commit }) {
     state.unsubscribes.forEach((unsubscribe) => unsubscribe());
     commit('clearAllUnsubscribes');
+  },
+  clearItems({ commit }, { modules = [] }) {
+    commit('clearItems', { modules });
   },
 };

@@ -57,7 +57,6 @@ import { mapActions } from 'vuex';
 import { webresourceToBlobAsync } from '@/helpers';
 
 export default {
-  // components: { UserProfileCardEditorRandomAvatar },
   props: {
     user: {
       type: Object,
@@ -68,7 +67,6 @@ export default {
     return {
       uploadingImage: false,
       uploadedFile: null,
-      randomAvatarImageType: '',
       activeUser: { ...this.user },
       locationOptions: [],
     };
@@ -83,7 +81,6 @@ export default {
       this.locationOptions = locationResults;
     },
     handleAvatarChange(e) {
-      console.log('UserProfileEdit->handleAvatarChange', e);
       this.uploadedFile = e.file;
       this.activeUser.avatar = e.dataUrl || e.url;
     },
@@ -103,7 +100,10 @@ export default {
     },
     async save() {
       await this.handleAvatarUpload();
-      this.$store.dispatch('users/updateUser', { ...this.activeUser });
+      this.$store.dispatch('users/updateUser', {
+        ...this.activeUser,
+        threads: this.activeUser.threadIds,
+      });
       this.$router.push({ name: 'Profile' });
     },
     cancel() {

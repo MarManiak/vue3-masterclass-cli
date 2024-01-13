@@ -68,7 +68,6 @@ export default {
   },
   methods: {
     handleAvatarChange(e) {
-      console.log('Register->handleAvatarChange', e);
       this.uploadedFile = e.file;
       this.avatarPreview = e.dataUrl || e.url;
     },
@@ -102,16 +101,7 @@ export default {
       this.uploadingImage = false;
       this.successRedirect();
     },
-    // handleImageUpload(e) {
-    //   this.form.avatar = e.target.files[0];
-    //   const reader = new FileReader();
-    //   reader.onload = (event) => {
-    //     this.avatarPreview = event.target.result;
-    //   };
-    //   reader.readAsDataURL(this.form.avatar);
-    // },
     successRedirect() {
-      console.log('redirecting');
       const redirectTo = this.$route.query.redirectTo || { name: 'Home' };
       this.$router.push(redirectTo);
     },
